@@ -48,7 +48,7 @@ class TradingView:
 
     scan_url = "https://scanner.tradingview.com/"
 
-    def data(symbols, interval, indicators):
+    def analysis_data(symbols, interval, indicators):
         """Format TradingView's Scanner Post Data
 
         Args:
@@ -94,6 +94,131 @@ class TradingView:
 
         data_json = {"symbols": {"tickers": [symbol.upper() for symbol in symbols], "query": {
             "types": []}}, "columns": [x + data_interval for x in indicators]}
+
+        return data_json
+
+    def heatmap_data(symbols, interval, indicators):
+        """Format TradingView's Scanner Post Data
+
+        Args:
+            symbols (list): List of EXCHANGE:SYMBOL (ex: ["NASDAQ:AAPL"] or ["BINANCE:BTCUSDT"])
+            interval (string): Time Interval (ex: 1m, 5m, 15m, 1h, 4h, 1d, 1W, 1M)
+
+        Returns:
+            string: JSON object as a string.
+        """
+
+        # TODO: Eason: Complete here.
+        # if interval == "1m":
+        #     # 1 Minute
+        #     data_interval = "|1"
+        # elif interval == "5m":
+        #     # 5 Minutes
+        #     data_interval = "|5"
+        # elif interval == "15m":
+        #     # 15 Minutes
+        #     data_interval = "|15"
+        # elif interval == "30m":
+        #     # 30 Minutes
+        #     data_interval = "|30"
+        # elif interval == "1h":
+        #     # 1 Hour
+        #     data_interval = "|60"
+        # elif interval == "2h":
+        #     # 2 Hours
+        #     data_interval = "|120"
+        # elif interval == "4h":
+        #     # 4 Hour
+        #     data_interval = "|240"
+        # elif interval == "1W":
+        #     # 1 Week
+        #     data_interval = "|1W"
+        # elif interval == "1M":
+        #     # 1 Month
+        #     data_interval = "|1M"
+        # else:
+        #     if interval != '1d':
+        #         warnings.warn(
+        #             "Interval is empty or not valid, defaulting to 1 day.")
+        #     # Default, 1 Day
+        #     data_interval = ""
+
+        data_json = {
+            "columns": [
+                "change|60",
+                "change|240",
+                "change",
+                "Perf.W",
+                "Perf.1M",
+                "Perf.3M",
+                "Perf.6M",
+                "Perf.YTD",
+                "Perf.Y",
+                "premarket_change",
+                "postmarket_change",
+                "relative_volume_10d_calc",
+                "Volatility.D",
+                "gap",
+                "market_cap_basic",
+                "number_of_employees",
+                "dividend_yield_recent",
+                "price_earnings_ttm",
+                "price_sales_ratio",
+                "price_book_ratio",
+                "price_book_fq",
+                "volume|60",
+                "volume|240",
+                "volume",
+                "volume|1W",
+                "volume|1M",
+                "Value.Traded|60",
+                "Value.Traded|240",
+                "Value.Traded",
+                "Value.Traded|1W",
+                "Value.Traded|1M",
+                "sector",
+                "logoid",
+                "close|60",
+                "pricescale",
+                "name",
+                "description"
+            ],
+            "filter": [
+                {
+                "left": "market_cap_basic",
+                "operation": "nempty"
+                },
+                {
+                "left": "type",
+                "operation": "equal",
+                "right": "stock"
+                },
+                {
+                "left": "subtype",
+                "operation": "in_range",
+                "right": [
+                    "common",
+                    "foreign-issuer"
+                ]
+                },
+                {
+                "left": "is_primary",
+                "operation": "equal",
+                "right": true
+                }
+            ],
+            "ignore_unknown_fields": false,
+            "options": {
+                "lang": "en"
+            },
+            "sort": {
+                "sortBy": "market_cap_basic",
+                "sortOrder": "desc"
+            },
+            "markets": [
+                "china"
+            ]
+        }
 
         return data_json
 
@@ -347,7 +472,7 @@ class TA_Handler(object):
             raise Exception("Symbol is empty or not valid.")
 
         exchange_symbol = f"{self.exchange}:{self.symbol}"
-        data = TradingView.data([exchange_symbol], self.interval, indicators)
+        data = TradingView.analysis_data([exchange_symbol], self.interval, indicators)
         scan_url = f"{TradingView.scan_url}{self.screener.lower()}/scan"
         headers = {"User-Agent": "tradingview_ta/{}".format(__version__)}
         response = requests.post(
@@ -415,7 +540,7 @@ def get_multiple_analysis(screener, interval, symbols, additional_indicators=[],
     if additional_indicators:
         indicators_key += additional_indicators
 
-    data = TradingView.data(symbols, interval, indicators_key)
+    data = TradingView.analysis_data(symbols, interval, indicators_key)
     scan_url = f"{TradingView.scan_url}{screener.lower()}/scan"
     headers = {"User-Agent": "tradingview_ta/{}".format(__version__)}
     response = requests.post(
